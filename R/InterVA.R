@@ -145,7 +145,7 @@ save.va.prob <- function(x, filename){
     	Sys_Prior[39] <- 0.00001
     }
     ## Prepare the output
-    ID.list <- rep(0, N)
+    ID.list <- rep("NA", N)
     VAresult <- vector("list",N)
     ## If append is FALSE, build the skeleton of the new file for output
     if(append == FALSE) {
@@ -158,14 +158,14 @@ save.va.prob <- function(x, filename){
     ## Calculate the InterVA result one by one
     for(i in 1:N){
         ## Save the current death ID
-        index.current <- as.numeric(Input[i, 1])
+        index.current <- as.character(Input[i, 1])
         ## Change input Y/NA into binary value
         Input[i, which(is.na(Input[i, ]))] <- "0"
         Input[i, which(toupper(Input[i, ]) != "Y")] <- "0"
         Input[i, which(toupper(Input[i, ]) == "Y")] <- "1"
         ## Change input as a numerical vactor
         input.current <- as.numeric(Input[i,])
-        input.current[1] <- index.current
+        input.current[1] <- 0
         ## Check if age is specified in the input
         ## If not specified, mark as error and skip the case
         if(sum(input.current[2:8]) < 1 ){
