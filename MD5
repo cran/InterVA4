@@ -1,0 +1,14 @@
+8a947c935690cfd28ecd86fc3077cfcf *DESCRIPTION
+8b54e5a89fbda3af5e077053d40bec76 *NAMESPACE
+d4a0dc45ab057bd67e1eef6116f23743 *R/InterVA.R
+fce8fa380fe561d43e632083e7bbaa31 *R/InterVA.plot.R
+f13df71d5c0b5ad3c7ca372c8eb26fbd *data/SampleInput.rda
+54e6687417ecc0cba306ec6430bc6831 *data/causetext.rda
+6a5ce03f4300c720c52266b0f70122a5 *data/probbase.rda
+de749b2ca1ae6233778e95f571b31ef1 *man/InterVA.Rd
+74966c38bd63fa8b8ec4f2189e8ea6c2 *man/InterVA.plot.Rd
+9028875c0565f2c33adefe2ca2a438b7 *man/InterVA4-package.Rd
+0131ff91bfcefb435f34d97ad80af9a9 *man/Population.summary.Rd
+4eacdfb6027a97444c9ee13e26de20b4 *man/SampleInput.Rd
+da5e72be2a8081002094bc6103d64b75 *man/causetext.Rd
+d4c5c1ba897503a12ea2d4ad8bc7fd0a *man/probbase.Rd
