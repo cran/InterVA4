@@ -7,12 +7,15 @@ Summarize and plot a population level distribution of va probabilities.
 \description{
 The function takes input of a list of va object and produces a summary plot for the population distribution.}
 \usage{
-Population.summary(va, type="both", min.prob = 0.01, ... )
+Population.summary(va, noplot = FALSE, type="both", min.prob = 0.01, ... )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{va}{
 The list of va object to summarize.}
+  \item{noplot}{
+A logical value indicating whether the plot will be shown. If it is set to "TRUE", only the CSMF will be returned.  	
+  }
   \item{min.prob}{
 The minimum probability that is to be plotted in bar chart, or to be labeled in pie chart.
 }
@@ -34,6 +37,9 @@ Zehang LI, Tyler McCormick, Sam Clark
 data(SampleInput)
 sample.output<-InterVA(SampleInput, HIV = "h", Malaria = "v", directory = "VA test",
 filename = "VA_result", output = "extended", append=FALSE)
+
+## Get CSMF without plots
+population.summary <- Population.summary(sample.output$VA, noplot = TRUE)
 
 ## Population level summary using pie chart
 population.summary <- Population.summary(sample.output$VA, type = "pie", min.prob = 0.01, 

@@ -1,6 +1,6 @@
 
 
-InterVA<-function(Input,HIV,Malaria,directory = NULL, filename = "VA_result", output="classic", append=FALSE, replicate = FALSE){
+InterVA<-function(Input,HIV,Malaria,directory = NULL, filename = "VA_result", output="classic", append=FALSE, groupcode = FALSE, replicate = FALSE){
     ############################
     ## define mid-step functions
     ############################
@@ -71,7 +71,12 @@ save.va.prob <- function(x, filename){
     # data(causetext) 
     data("causetext", envir = environment())
     causetext <- get("causetext", envir  = environment())
-    
+    # decide whether to use group code
+    if(groupcode){
+    		causetext <- causetext[,-2]
+    }else{
+    		causetext <- causetext[,-3]
+    	}
     
     ## Build the skeleton of the error log.
     cat(paste("Error log built for InterVA", Sys.time(), "\n"),file="errorlog.txt",append = FALSE)
@@ -86,21 +91,36 @@ save.va.prob <- function(x, filename){
     Input <- as.matrix(Input)
     ## Check if there is any data at all
     if(dim(Input)[1] < 1){
-        cat("error: no data input")
-        return(NULL)
+        stop("error: no data input")
     }
     N <- dim(Input)[1]  ## Number of data
     S <- dim(Input)[2]  ## Length of individial field
     ##  Check if the length of input variable matches the probbase dataset
     if(S != dim(probbase)[1] ){
-        cat("error: invalid data input format. Number of values incorrect")
-        return(NULL)
+        stop("error: invalid data input format. Number of values incorrect")
     }
     ## Check if the last field is the correct one
     if(tolower(colnames(Input)[S]) != "scosts"){
-        cat("error: the last variable should be 'scosts'")
-        return(NULL)
+        stop("error: the last variable should be 'scosts'")
     }
+    ## check the column names and give warning
+    data("SampleInput", envir = environment())
+    SampleInput <- get("SampleInput", envir  = environment())
+    valabels = colnames(SampleInput)
+    count.changelabel = 0
+    for(i in 1:S){
+        if(tolower(colnames(Input)[i]) != tolower(valabels)[i]){
+            warning(paste("Input columne '", colnames(Input)[i], "' does not match InterVA standard: '", 
+                    valabels[i], "'", sep = ""),
+                    call. = FALSE, immediate. = TRUE)
+            count.changelabel = count.changelabel + 1
+        }         
+    }
+    if(count.changelabel > 0){
+        warning(paste(count.changelabel, "column names changed in input. \n If the change in undesirable, please change in the input to match standard InterVA4 input format."), call. = FALSE, immediate. = TRUE)
+        colnames(Input) <- valabels
+    }
+    
     ## Change conditional probability labels into values
     probbase[probbase=="I"]<-1
     probbase[probbase=="A+"]<-0.8
@@ -249,14 +269,11 @@ save.va.prob <- function(x, filename){
         # Normalize A group
         if(sum(prob[1:3]) > 0) prob[1:3] <- prob[1:3]/sum(prob[1:3])
         # Normalize B group 
-        if(sum(prob[4:63]) > 0) prob[4:63] <- prob[4:63]/sum(prob[4:63])
+		if(sum(prob[4:63]) > 0) prob[4:63] <- prob[4:63]/sum(prob[4:63])
         # delete too small probs
         prob[prob < 0.000001] <- 0
         }
-        
-        
-        
-        
+              
         names(prob) <- causetext[,2]
         prob_A <- prob[1:3] # Extracting only A_group
         prob_B <- prob[4:63] # Extracting only COD
