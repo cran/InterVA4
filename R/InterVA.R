@@ -1,6 +1,74 @@
-
-
-InterVA<-function(Input,HIV,Malaria,directory = NULL, filename = "VA_result", output="classic", append=FALSE, groupcode = FALSE, replicate = FALSE){
+#' Provide InterVA4 analysis on the data input.
+#' 
+#' This function implements the algorithm in the InterVA4 software.  It
+#' produces individual cause of death and population cause-specific mortality
+#' fractions.
+#' 
+#' InterVA performs the same tasks as the InterVA4. The output is saved in a
+#' .csv file specified by user. The calculation is based on the conditional and
+#' prior distribution of 68 CODs. The function also could save the full
+#' probability distibution of each individual to file. All information about
+#' each individual is saved to a va class object.
+#' 
+#' Be careful if the input file does not match InterVA input format strictly.
+#' The function will run normally as long as the number of symptoms are
+#' correct. Any inconsistent symptom names will be printed in console as
+#' warning. If there's wrong match of symptom from warning, please change in
+#' the input to correct orders.
+#' 
+#' @param Input A matrix input, or data read from csv files in the same format
+#' as required by InterVA4. Sample input is included as data(SampleInput).
+#' @param HIV An indicator of the level of prevalence of HIV. The input should
+#' be one of the following: "h"(high),"l"(low), or "v"(very low).
+#' @param Malaria An indicator of the level of prevalence of Malaria. The input
+#' should be one of the following: "h"(high),"l"(low), or "v"(very low).
+#' @param directory The directory to store the output from InterVA4. It should
+#' either be an existing valid directory, or a new folder to be created. If no
+#' path is given, the current working directory will be used.
+#' @param filename The filename the user wish to save the output. No extension
+#' needed. The output is in .csv format by default.
+#' @param output "classic": The same deliminated output format as InterVA4; or
+#' "extended": deliminated output followed by full distribution of cause of
+#' death proability.
+#' @param append A logical value indicating whether or not the new output
+#' should be appended to the existing file.
+#' @param replicate A logical value indicating whether or not the calculation
+#' should replicate original InterVA4 software exactly.If replicate = F, causes
+#' with small probability are not dropped out of calculation in intermediate
+#' steps, and a possible bug in original InterVA4 implementation is fixed.  If
+#' replicate=T, then the output values will be exactly as they would be from
+#' calling the InterVA4 program.
+#' @param groupcode A logical value indicating whether or not the group code
+#' will be included in the output causes.
+#' @return \item{ID }{identifier from batch (input) file} \item{MALPREV
+#' }{selected malaria prevalence} \item{HIVPREV }{selected HIV prevalence}
+#' \item{PREGSTAT }{most likely pregnancy status} \item{PREGLIK }{likelihood of
+#' PREGSTAT} \item{PRMAT }{ likelihood of maternal death} \item{INDET
+#' }{indeterminate outcome} \item{CAUSE1 }{ most likely cause} \item{LIK1 }{
+#' likelihood of 1st cause} \item{CAUSE2 }{ second likely cause} \item{LIK2 }{
+#' likelihood of 2nd cause} \item{CAUSE3 }{ third likely cause} \item{LIK3 }{
+#' likelihood of 3rd cause} \item{wholeprob}{ full distribution of causes of
+#' death}
+#' @author Zehang Li, Tyler McCormick, Sam Clark
+#' @seealso \code{\link{InterVA.plot}}
+#' @references http://www.interva.net/
+#' @keywords InterVA
+#' @examples
+#' 
+#' data(SampleInput)
+#' ## to get easy-to-read version of causes of death make sure the column
+#' ## orders match interVA4 standard input this can be monitored by checking
+#' ## the warnings of column names
+#' 
+#' sample.output1 <- InterVA(SampleInput, HIV = "h", Malaria = "l", directory = "VA test", 
+#'     filename = "VA_result", output = "extended", append = FALSE, replicate = TRUE)
+#' 
+#' ## to get causes of death with group code for further usage
+#' sample.output2 <- InterVA(SampleInput, HIV = "h", Malaria = "l", directory = "VA test", 
+#'     filename = "VA_result_wt_code", output = "classic", append = FALSE, 
+#'     replicate = TRUE, groupcode = TRUE)
+#' 
+InterVA<-function(Input,HIV,Malaria,directory = NULL, filename = "VA_result", output="classic", append=FALSE, groupcode = FALSE, replicate = FALSE, write = TRUE){
     ############################
     ## define mid-step functions
     ############################
@@ -26,24 +94,28 @@ InterVA<-function(Input,HIV,Malaria,directory = NULL, filename = "VA_result", ou
     va.out
 }
 
-save.va <- function(x, filename){
+save.va <- function(x, filename, write){
     ## This function saves va object to file in the deliminated format of InterVA4.
     ## The input is a va object and a filename (without extension).
     ## The output is a .csv file.
     ##
     ## Delete the full probability distribution.
+    if(!write){return}
+
     x <- x[-14]
     x <- as.matrix(x)
     filename <- paste(filename, ".csv", sep = "") 
     write.table(t(x), file=filename, sep = ",", append = TRUE,row.names = FALSE,col.names = FALSE)    
 }
-save.va.prob <- function(x, filename){
+save.va.prob <- function(x, filename, write){
     ## This function saves va object to file in the deliminated format of InterVA4
     ## followed by a full probability distribution on CODs.
     ## The input is a va object and a filename (without extension).
     ## The output is a .csv file.
     ##
     ## Extract the full probability distribution.
+    if(!write){return}
+
     prob <- unlist(x[14])
     x <- x[-14]
     ## Reformat the matrix with probability distribution.
@@ -79,8 +151,10 @@ save.va.prob <- function(x, filename){
     	}
     
     ## Build the skeleton of the error log.
-    cat(paste("Error log built for InterVA", Sys.time(), "\n"),file="errorlog.txt",append = FALSE)
-    cat(paste("Warning log built for InterVA", Sys.time(), "\n"),file="warnings.txt",append = FALSE)
+    if(write){
+         cat(paste("Error log built for InterVA", Sys.time(), "\n"),file="errorlog.txt",append = FALSE)
+         cat(paste("Warning log built for InterVA", Sys.time(), "\n"),file="warnings.txt",append = FALSE)     
+    }
     ######################################################
     ## Input should be a matrix with each rows containing:
     ## Field 1: ID number
@@ -168,7 +242,7 @@ save.va.prob <- function(x, filename){
     ID.list <- rep("NA", N)
     VAresult <- vector("list",N)
     ## If append is FALSE, build the skeleton of the new file for output
-    if(append == FALSE) {
+    if(write && append == FALSE) {
     	header=c("ID","MALPREV","HIVPREV","PREGSTAT","PREGLIK","PRMAT","INDET",
     	"CAUSE1","LIK1","CAUSE2","LIK2","CAUSE3","LIK3")
     	if(output == "extended") header=c(header,as.character(causetext[,2]))
@@ -188,21 +262,21 @@ save.va.prob <- function(x, filename){
         input.current[1] <- 0
         ## Check if age is specified in the input
         ## If not specified, mark as error and skip the case
-        if(sum(input.current[2:8]) < 1 ){
+        if(write && sum(input.current[2:8]) < 1 ){
             cat(paste(index.current," Error in age indicator: Not Specified ","\n"), file="errorlog.txt", append=TRUE)
             next
         }
         
         ## Check if sex is specified in the input
         ## If not, mark as error and skip the case
-        if(sum(input.current[9:10]) < 1){
+        if(write && sum(input.current[9:10]) < 1){
             cat(paste(index.current," Error in sex indicator: Not Specified ","\n"), file="errorlog.txt", append=TRUE)
             next
         }
         ## Check if there is any symptoms
         ## 2-22 & 224-246 are not symptoms, but personal profile, or life style
         ## This range is set in the InterVA file
-        if(sum(input.current[23:223]) < 1 ){
+        if(write && sum(input.current[23:223]) < 1 ){
             cat(paste(index.current," Error in indicators: No symptoms specified ","\n"), file="errorlog.txt", append=TRUE)
             next
         }
@@ -221,7 +295,9 @@ save.va.prob <- function(x, filename){
                     
                     if( sum( Dont.ask.list ) > 0 ) {
                     	input.current[j + 1] <- 0
-                    	cat(index.current, "   ", paste(probbase[j+1, 2], "  value inconsistent with ", Dont.ask[which(Dont.ask.list > 0)], " - cleared in working file \n"), file="warnings.txt", append=TRUE)
+                        	if(write){
+                                cat(index.current, "   ", paste(probbase[j+1, 2], "  value inconsistent with ", Dont.ask[which(Dont.ask.list > 0)], " - cleared in working file \n"), file="warnings.txt", append=TRUE)
+                            }
                     	}
                  }
                  # Note input.current[j+1] might be changed in the step above!
@@ -231,7 +307,9 @@ save.va.prob <- function(x, filename){
                     if( !is.na(match(toupper(Ask.if), toupper(colnames(Input))))  ){
                         if(input.current[match(toupper(Ask.if), toupper(colnames(Input)) )] == 0){
                             input.current[match(toupper(Ask.if), toupper(colnames(Input)) )] <- 1
-                            cat(index.current, "   ", paste(probbase[j+1, 2], "  not flagged in category ", Ask.if, " - updated in working file \n"), file="warnings.txt", append=TRUE)
+                            if(write){
+                                cat(index.current, "   ", paste(probbase[j+1, 2], "  not flagged in category ", Ask.if, " - updated in working file \n"), file="warnings.txt", append=TRUE)
+                            }
                         }
                     }
                 }   
@@ -271,7 +349,7 @@ save.va.prob <- function(x, filename){
         # Normalize B group 
 		if(sum(prob[4:63]) > 0) prob[4:63] <- prob[4:63]/sum(prob[4:63])
         # delete too small probs
-        prob[prob < 0.000001] <- 0
+        if(replicate){prob[prob < 0.000001] <- 0}
         }
               
         names(prob) <- causetext[,2]
@@ -331,8 +409,8 @@ save.va.prob <- function(x, filename){
         ID.list[i] <- index.current
         VAresult[[i]] <- va(ID = index.current, MALPREV = Malaria, HIVPREV = HIV, PREGSTAT = preg_state, PREGLIK = lik.preg, PRMAT = lik_mat, INDET = indet, CAUSE1 = cause1, LIK1 = lik1, CAUSE2 =cause2, LIK2 = lik2, CAUSE3 = cause3, LIK3 = lik3, wholeprob = c(prob_A,prob_B))
         ## Determine the form of file saved
-        if(output=="classic") save.va(VAresult[[i]],filename=filename)
-        if(output=="extended") save.va.prob(VAresult[[i]],filename=filename)
+        if(output=="classic") save.va(VAresult[[i]],filename=filename, write)
+        if(output=="extended") save.va.prob(VAresult[[i]],filename=filename, write)
     }
     setwd(globle.dir)
     return(list(ID = ID.list, VA = VAresult))
