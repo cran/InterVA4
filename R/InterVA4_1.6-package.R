@@ -33,7 +33,7 @@ NULL
 #' \url{https://github.com/richardli/InterVA4/}
 #' 
 #' \tabular{ll}{ Package: \tab InterVA4\cr Type: \tab Package\cr Version: \tab
-#' 1.2\cr Date: \tab 2012-12-18\cr License: \tab GPL-2\cr }
+#' 1.6\cr Date: \tab 2015-08-29\cr License: \tab GPL-2\cr }
 #' 
 #' @name InterVA4-package
 #' @aliases InterVA4 InterVA4-package

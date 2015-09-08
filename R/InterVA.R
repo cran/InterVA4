@@ -37,9 +37,19 @@
 #' with small probability are not dropped out of calculation in intermediate
 #' steps, and a possible bug in original InterVA4 implementation is fixed.  If
 #' replicate=T, then the output values will be exactly as they would be from
-#' calling the InterVA4 program.
+#' calling the InterVA4 program. Since version 1.6, two control variables are added
+#' to control the two bugs respectively. Setting this to TRUE will overwrite both to
+#' TRUE.
+#' @param replicate.bug1 This logical indicator controls whether or not the bug
+#' in InterVA4.2 involving the symptom "skin_les" will be replicated or not. It
+#' is suggested to set to FALSE.
+#' @param replicate.bug2 This logical indicator controls whether the causes
+#' with small probability are dropped out of calculation in intermediate
+#' steps or not. It is suggested to set to FALSE.
 #' @param groupcode A logical value indicating whether or not the group code
 #' will be included in the output causes.
+#' @param write A logical value indicating whether or not the output (including 
+#' errors and warnings) will be saved to file.
 #' @return \item{ID }{identifier from batch (input) file} \item{MALPREV
 #' }{selected malaria prevalence} \item{HIVPREV }{selected HIV prevalence}
 #' \item{PREGSTAT }{most likely pregnancy status} \item{PREGLIK }{likelihood of
@@ -61,14 +71,14 @@
 #' ## the warnings of column names
 #' 
 #' sample.output1 <- InterVA(SampleInput, HIV = "h", Malaria = "l", directory = "VA test", 
-#'     filename = "VA_result", output = "extended", append = FALSE, replicate = TRUE)
+#'     filename = "VA_result", output = "extended", append = FALSE, replicate = FALSE)
 #' 
 #' ## to get causes of death with group code for further usage
 #' sample.output2 <- InterVA(SampleInput, HIV = "h", Malaria = "l", directory = "VA test", 
 #'     filename = "VA_result_wt_code", output = "classic", append = FALSE, 
-#'     replicate = TRUE, groupcode = TRUE)
+#'     replicate = FALSE, groupcode = TRUE)
 #' 
-InterVA<-function(Input,HIV,Malaria,directory = NULL, filename = "VA_result", output="classic", append=FALSE, groupcode = FALSE, replicate = FALSE, write = TRUE){
+InterVA<-function(Input,HIV,Malaria,directory = NULL, filename = "VA_result", output="classic", append=FALSE, groupcode = FALSE, replicate = FALSE, replicate.bug1 = FALSE, replicate.bug2 = FALSE, write = TRUE){
     ############################
     ## define mid-step functions
     ############################
@@ -123,7 +133,12 @@ save.va.prob <- function(x, filename, write){
     filename <- paste(filename, ".csv", sep = "") 
     write.table(t(x), file=filename, sep = ",", append = TRUE,row.names = FALSE,col.names = FALSE)    
 }
-
+    ## overwrite replication options if needed
+    if(replicate){
+      warning("option 'replicate' is turned on, all bugs in InterVA-4 is replicated\n", immediate. = TRUE)
+      replicate.bug1 <- TRUE
+      replicate.bug2 <- TRUE
+    }
     ########################
     ## Read in data files
     ########################
@@ -223,6 +238,11 @@ save.va.prob <- function(x, filename, write){
     D <- length(Sys_Prior)
     ## Modify the prior based on HIV and Malaria prevalence
     ## 19 = B_HIVAIDS; 21 = B_MALAR; 39 = B_SICKLE
+    HIV <- tolower(HIV)
+    Malaria <- tolower(Malaria)
+    if(!(HIV %in% c("h", "l", "v"))  || !(Malaria %in% c("h", "l", "v"))){
+      stop("error: the HIV and Malaria indicator should be one of the three: 'h', 'l', and 'v'")
+    }
     if(HIV == "h") Sys_Prior[19] <- 0.05
     if(HIV == "l") Sys_Prior[19] <- 0.005
     if(HIV == "v") Sys_Prior[19] <- 0.00001
@@ -239,7 +259,7 @@ save.va.prob <- function(x, filename, write){
     	Sys_Prior[39] <- 0.00001
     }
     ## Prepare the output
-    ID.list <- rep("NA", N)
+    ID.list <- rep(NA, N)
     VAresult <- vector("list",N)
     ## If append is FALSE, build the skeleton of the new file for output
     if(write && append == FALSE) {
@@ -249,8 +269,16 @@ save.va.prob <- function(x, filename, write){
         write.table(t(header),file=paste(filename,".csv",sep=""),row.names=FALSE,col.names=FALSE,sep=",")
 
     }
+    ## add progress indicators now
+    nd <- max(1, round(N / 100))
+    np <- max(1, round(N / 10))
+    
     ## Calculate the InterVA result one by one
     for(i in 1:N){
+        ## print out progress
+        if(i %% nd == 0){cat(".")}
+        if(i %% np == 0){cat(paste(round(i/N * 100), "% completed\n", sep = ""))}
+      
         ## Save the current death ID
         index.current <- as.character(Input[i, 1])
         ## Change input Y/NA into binary value
@@ -262,22 +290,28 @@ save.va.prob <- function(x, filename, write){
         input.current[1] <- 0
         ## Check if age is specified in the input
         ## If not specified, mark as error and skip the case
-        if(write && sum(input.current[2:8]) < 1 ){
-            cat(paste(index.current," Error in age indicator: Not Specified ","\n"), file="errorlog.txt", append=TRUE)
+        if(sum(input.current[2:8]) < 1 ){
+            if(write){
+              cat(paste(index.current," Error in age indicator: Not Specified ","\n"), file="errorlog.txt", append=TRUE)
+            }
             next
         }
-        
+
         ## Check if sex is specified in the input
         ## If not, mark as error and skip the case
-        if(write && sum(input.current[9:10]) < 1){
-            cat(paste(index.current," Error in sex indicator: Not Specified ","\n"), file="errorlog.txt", append=TRUE)
+        if(sum(input.current[9:10]) < 1){
+            if(write){
+              cat(paste(index.current," Error in sex indicator: Not Specified ","\n"), file="errorlog.txt", append=TRUE)
+            }
             next
         }
         ## Check if there is any symptoms
         ## 2-22 & 224-246 are not symptoms, but personal profile, or life style
         ## This range is set in the InterVA file
-        if(write && sum(input.current[23:223]) < 1 ){
-            cat(paste(index.current," Error in indicators: No symptoms specified ","\n"), file="errorlog.txt", append=TRUE)
+        if(sum(input.current[23:223]) < 1 ){
+            if(write){
+              cat(paste(index.current," Error in indicators: No symptoms specified ","\n"), file="errorlog.txt", append=TRUE)
+            }
             next
         }
         
@@ -321,7 +355,7 @@ save.va.prob <- function(x, filename, write){
         ## So if the user wishes to replicate entirely as InterVA
         ## the replicate option should be set to TRUE
         ## effect: whenever skin = 1 --> skin_les = 1
-        if(replicate == TRUE && input.current[84] == 1){
+        if(replicate.bug1 == TRUE && input.current[84] == 1){
         	input.current[85] <- 1
         }
         
@@ -349,7 +383,7 @@ save.va.prob <- function(x, filename, write){
         # Normalize B group 
 		if(sum(prob[4:63]) > 0) prob[4:63] <- prob[4:63]/sum(prob[4:63])
         # delete too small probs
-        if(replicate){prob[prob < 0.000001] <- 0}
+        if(replicate.bug2){prob[prob < 0.000001] <- 0}
         }
               
         names(prob) <- causetext[,2]
@@ -383,7 +417,7 @@ save.va.prob <- function(x, filename, write){
         prob.temp <- prob_B
         if(max(prob.temp) <= 0.4){
             indet <- "Indet"
-            cause1<-lik1<-cause2<-lik2<-cause3<-lik3<-""
+            cause1<-lik1<-cause2<-lik2<-cause3<-lik3<-" "
         }
         ## Determine the output of InterVA
         if(max(prob.temp) > 0.4){
@@ -413,7 +447,7 @@ save.va.prob <- function(x, filename, write){
         if(output=="extended") save.va.prob(VAresult[[i]],filename=filename, write)
     }
     setwd(globle.dir)
-    return(list(ID = ID.list, VA = VAresult))
+    return(list(ID = ID.list[which(!is.na(ID.list))], VA = VAresult[which(!is.na(ID.list))]))
 }
 
 
