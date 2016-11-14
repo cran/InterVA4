@@ -1,8 +1,8 @@
-2755b8c6d9a3f0589aedf6e37d3e9bde *DESCRIPTION
+66e6f57c9b9e269cca7962d00e4ba21d *DESCRIPTION
 7359e2e6d6ae069d97a118997ab8f31f *NAMESPACE
-4dab0a730eee67384e3ea5f85b462586 *R/InterVA.R
-bc9572e2f76ff7820dd8d103b8b2b34b *R/InterVA.plot.R
-abd572a7783ed53aa5aec19b966cf93d *R/InterVA.summary.r
+b1bed47ad85f219a0185c5327648268f *R/InterVA.R
+c2949e34e2348f1e451403722b60eb3b *R/InterVA.plot.R
+30b662dd2934653ac302afff14b1cf0d *R/InterVA.summary.r
 9ed53ac6e8ba54b48812d239d06a8bb1 *R/InterVA4_1.7-package.R
 fb1833b4ddb35e23638dd49f93f844c7 *R/zzz.R
 aef96bb1673ac23abf6343b05fba666f *data/SampleInput.rda
