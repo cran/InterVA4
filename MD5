@@ -1,4 +1,4 @@
-91b706683cf89fcde0edcb86a49902cb *DESCRIPTION
+dc3248c98f24a634cee8bc41c4fb2714 *DESCRIPTION
 7359e2e6d6ae069d97a118997ab8f31f *NAMESPACE
 b6d1dc3f25b44b7a50f6975cb58944ef *R/InterVA.R
 c2949e34e2348f1e451403722b60eb3b *R/InterVA.plot.R
@@ -10,7 +10,7 @@ accf17390ba5314f4a1104581e099f52 *data/causetext.rda
 6a5ce03f4300c720c52266b0f70122a5 *data/probbase.rda
 6a4d9d219fba51facb82cdcbc239ba3d *data/probbase3.rda
 842b2bac4007b7c48e3ace0aafe4a904 *inst/CITATION
-7dbfaf392d12d70f4ddc89bd5bb11dd5 *inst/NEWS.Rd
+cd8c0747e375f6d3fbf10e061687cdae *inst/NEWS.Rd
 6b403e46095af018a398735258174025 *man/CSMF.Rd
 11f95845d39ae520814ffcea7fbf46fc *man/CSMF.interVA4.Rd
 b285745b678d830729f843fd8a41fbfc *man/InterVA.Rd
