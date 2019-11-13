@@ -71,12 +71,10 @@
 #' ## orders match interVA4 standard input this can be monitored by checking
 #' ## the warnings of column names
 #' 
-#' sample.output1 <- InterVA(SampleInput, HIV = "h", Malaria = "l", directory = "VA test", 
-#'     filename = "VA_result", output = "extended", append = FALSE, replicate = FALSE)
+#' sample.output1 <- InterVA(SampleInput, HIV = "h", Malaria = "l", write=FALSE, replicate = FALSE)
 #' 
 #' ## to get causes of death with group code for further usage
-#' sample.output2 <- InterVA(SampleInput, HIV = "h", Malaria = "l", directory = "VA test", 
-#'     filename = "VA_result_wt_code", output = "classic", append = FALSE, 
+#' sample.output2 <- InterVA(SampleInput, HIV = "h", Malaria = "l", write=FALSE,
 #'     replicate = FALSE, groupcode = TRUE)
 #' 
 InterVA<-function(Input, HIV, Malaria, directory = NULL, filename = "VA_result", output="classic", append=FALSE, groupcode = FALSE, replicate = FALSE, replicate.bug1 = FALSE, replicate.bug2 = FALSE, write = TRUE, ...){
@@ -203,7 +201,7 @@ save.va.prob <- function(x, filename, write){
     count.changelabel = 0
     for(i in 1:S){
         if(tolower(colnames(Input)[i]) != tolower(valabels)[i]){
-            warning(paste("Input columne '", colnames(Input)[i], "' does not match InterVA standard: '", 
+            warning(paste("Input column '", colnames(Input)[i], "' does not match InterVA standard: '", 
                     valabels[i], "'", sep = ""),
                     call. = FALSE, immediate. = TRUE)
             count.changelabel = count.changelabel + 1
@@ -401,20 +399,20 @@ save.va.prob <- function(x, filename, write){
         }
         if(which.max(prob_A) == 1 && prob_A[1] != 0 && reproductiveAge == 1){
             preg_state <- "nrp"
-            lik.preg <- round(prob_A[1]/sum(prob_A)*100)
+            lik.preg <- as.numeric(round(prob_A[1]/sum(prob_A)*100))
         }
         if(which.max(prob_A) == 2 && prob_A[2] != 0 && reproductiveAge == 1){
             preg_state <- "pr6w"
-            lik.preg <- round(prob_A[2]/sum(prob_A)*100)
+            lik.preg <- as.numeric(round(prob_A[2]/sum(prob_A)*100))
         }
         if(which.max(prob_A) == 3 && prob_A[3] != 0 && reproductiveAge == 1){
             preg_state <- "preg"
-            lik.preg <- round(prob_A[3]/sum(prob_A)*100)
+            lik.preg <- as.numeric(round(prob_A[3]/sum(prob_A)*100))
         }
         
-        ## Calculate likelihood of marternal death
+        ## Calculate likelihood of maternal death
         lik_mat <- " "
-        if(reproductiveAge == 1 && sum(prob_A) != 0) lik_mat <- round((prob_A[2]+prob_A[3])/sum(prob_A)*100)
+        if(reproductiveAge == 1 && sum(prob_A) != 0) lik_mat <- as.numeric(round((prob_A[2]+prob_A[3])/sum(prob_A)*100))
         
         ## Normalize the probability of CODs
         if(sum(prob_B) != 0)  prob_B<-prob_B/sum(prob_B)

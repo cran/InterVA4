@@ -11,8 +11,7 @@
 #' @examples
 #' 
 #' data(SampleInput)
-#' sample.output <- InterVA(SampleInput, HIV = "h", Malaria = "v", directory = "VA test",
-#'        filename = "VA_result", output = "extended", append = FALSE)
+#' sample.output <- InterVA(SampleInput, HIV = "h", Malaria = "v", write=FALSE)
 #' ## Get CSMF without plots
 #' csmf<- CSMF.interVA4(sample.output$VA)
 #' data(SampleInput)
@@ -61,7 +60,7 @@ CSMF.interVA4 <- function(va){
         if(include.preg) this.dist[1:3] <- 0
         
         if(max(this.dist) < 0.4){
-          undeter <- undeter + sum(this.dist)  
+          undeter <- undeter + ifelse(sum(this.dist) == 0, 1, sum(this.dist))
         }else{
             cutoff.3 <- this.dist[order(this.dist, decreasing = TRUE)[3]]
             cutoff.2 <- this.dist[order(this.dist, decreasing = TRUE)[2]]
@@ -153,8 +152,7 @@ Population.summary<-function (va, top.aggregate = NULL, InterVA.rule = FALSE, no
 #' @examples
 #' 
 #' data(SampleInput)
-#' sample.output <- InterVA(SampleInput, HIV = "h", Malaria = "v", directory = "VA test", 
-#'                          filename = "VA_result", output = "extended", append = FALSE)
+#' sample.output <- InterVA(SampleInput, HIV = "h", Malaria = "v", write=FALSE)
 #' 
 #' ## Get CSMF without plots
 #' population.summary <- CSMF(sample.output$VA, noplot = TRUE)
@@ -315,8 +313,7 @@ CSMF <-function (va, top.aggregate = NULL, InterVA.rule = FALSE, noplot = FALSE,
 #' @examples
 #' 
 #' data(SampleInput)
-#' sample.output <- InterVA(SampleInput, HIV = "h", Malaria = "v", directory = "VA test", 
-#'     filename = "VA_result", output = "extended", append = FALSE)
+#' sample.output <- InterVA(SampleInput, HIV = "h", Malaria = "v", write=FALSE)
 #' 
 #' ## Individual level summary using pie chart
 #' InterVA.plot(sample.output$VA[[7]], type = "pie", min.prob = 0.01, 
